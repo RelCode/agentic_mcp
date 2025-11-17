@@ -4,7 +4,8 @@ from audit_service import run_mock_audit
 
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+origins = ["http://localhost:3000"]
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/")
 async def root():
@@ -13,7 +14,7 @@ async def root():
 @app.get("/audit/mock")
 async def audit_mock():
     result = await run_mock_audit()
-    return { "status": "OK", "result": result }
+    return { "status": "OK", "result": result.model_dump() }
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):

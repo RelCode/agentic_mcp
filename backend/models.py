@@ -8,7 +8,7 @@ class Issue(BaseModel):
     suggestion: str
     
 class ExtractionResult(BaseModel):
-    reference_acts: List[str]
+    referenced_acts: List[str]
     referenced_years: List[int]
     has_disclaimer: bool
     has_scope_of_work: bool
