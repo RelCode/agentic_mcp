@@ -10,7 +10,14 @@ async def run_mock_audit() -> AuditReport:
     """
     Run mock audit on hardcoded document using LLM -- will later be replaced with real document processing.
     """
-    report = await ochestrate_document_audit(MOCK_DOCUMENT)
+    report, _steps = await ochestrate_document_audit(MOCK_DOCUMENT)
     
     return report
     
+async def run_text_audit(document_text: str) -> AuditReport:
+    """
+    Run audit on provided document text using LLM.
+    """
+    report, _steps = await ochestrate_document_audit(document_text)
+    
+    return report
