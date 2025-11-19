@@ -33,14 +33,25 @@ EXTRACTION_PROMPT = ChatPromptTemplate.from_template(
         """
 )
 
-async def run_extraction_agent(document_text: str) -> ExtractionResult:
+async def run_extraction_agent(document_text: str) -> Any:
     llm = get_llm()
     parser = JsonOutputParser()
     
-    messages = EXTRACTION_PROMPT.format_messages(text=document_text)
+    prompt = EXTRACTION_PROMPT.format_prompt(text=document_text)
+    raw_prompt = prompt[0].content # grab content for trace
     
-    response = await llm.ainvoke(messages)
+    # messages = EXTRACTION_PROMPT.format_messages(text=document_text)
+    
+    response = await llm.ainvoke(prompt)
+    raw_output = response.content
     
     data: Dict[str, Any] = parser.parse(response.content)
+    extraction = ExtractionResult(**data)
     
-    return ExtractionResult(**data)
+    trace = {
+        "prompt": raw_prompt,
+        "raw_llm_output": raw_output,
+        "parsed_output": extraction.model_dump()
+    }
+    
+    return extraction, trace
