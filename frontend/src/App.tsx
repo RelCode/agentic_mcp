@@ -17,7 +17,7 @@ import {
 	TextField,
 	Divider,
 } from "@mui/material";
-import { CloudUpload, CheckCircle, Description, TextFields } from "@mui/icons-material";
+import { CloudUpload, CheckCircle, Description, TextFields, ExpandLess, ExpandMore } from "@mui/icons-material";
 
 const theme = createTheme({
 	palette: {
@@ -42,7 +42,8 @@ function App() {
 	const [text, setText] = useState<string>("");
 	const [uploading, setUploading] = useState(false);
 	const [response, setResponse] = useState<any>(null);
-    const [steps, setSteps] = useState<string[] | null>(null);
+	const [extraction, setExtraction] = useState<any>(null);
+	const [steps, setSteps] = useState<string[] | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,11 +60,16 @@ function App() {
 		setError(null);
 	};
 
+	const [extractionExpanded, setExtractionExpanded] = useState(false);
+	const [stepsExpanded, setStepsExpanded] = useState(false);
+
 	const handleFileUpload = async () => {
 		if (!selectedFile) {
 			setError("Please select a file first");
 			return;
 		}
+        setExtractionExpanded(false);
+        setStepsExpanded(false);
 
 		setUploading(true);
 		setError(null);
@@ -73,7 +79,7 @@ function App() {
 			const formData = new FormData();
 			formData.append("file", selectedFile);
 
-			const res = await fetch("http://localhost:8000/upload/", {
+			const res = await fetch("http://localhost:8000/audit/file", {
 				method: "POST",
 				body: formData,
 			});
@@ -83,7 +89,9 @@ function App() {
 			}
 
 			const data = await res.json();
-			setResponse(data);
+			setResponse(data.result);
+			setExtraction(data.extraction);
+			setSteps(data.steps);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Upload failed");
 		} finally {
@@ -96,6 +104,9 @@ function App() {
 			setError("Please enter some text first");
 			return;
 		}
+
+        setExtractionExpanded(false);
+        setStepsExpanded(false);
 
 		setUploading(true);
 		setError(null);
@@ -115,9 +126,9 @@ function App() {
 			}
 
 			const data = await res.json();
-            console.log("Data::", data);
 			setResponse(data.result);
-            setSteps(data.steps);
+			setExtraction(data.extraction);
+			setSteps(data.steps);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Submission failed");
 		} finally {
@@ -225,7 +236,11 @@ function App() {
 												fullWidth
 												size="large"
 												startIcon={
-													uploading ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />
+													uploading ? (
+														<CircularProgress size={20} color="inherit" />
+													) : (
+														<CheckCircle />
+													)
 												}
 												sx={{ py: 1.5, mt: "auto" }}
 											>
@@ -271,7 +286,11 @@ function App() {
 												fullWidth
 												size="large"
 												startIcon={
-													uploading ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />
+													uploading ? (
+														<CircularProgress size={20} color="inherit" />
+													) : (
+														<CheckCircle />
+													)
 												}
 												sx={{ py: 1.5 }}
 											>
@@ -288,59 +307,39 @@ function App() {
 								</Alert>
 							)}
 
-                            {
-                                steps && (
-                                    <Card
-                                        sx={{
-                                            width: "100%",
-                                            mt: 3,
-                                            background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Stack spacing={2}>
-                                                <Typography variant="h6" color="primary" fontWeight="bold">
-                                                    Audit Steps
-                                                </Typography>
-                                                <Box
-                                                    component="pre"
-                                                    sx={{
-                                                        backgroundColor: "#004d40",
-                                                        color: "#b2dfdb",
-                                                        padding: 2,
-                                                        borderRadius: 2,
-                                                        overflow: "auto",
-                                                        fontSize: "0.875rem",
-                                                        fontFamily: '"Consolas", "Monaco", "Courier New", monospace',
-                                                        maxHeight: "400px",
-                                                    }}
-                                                >
-                                                    {steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}
-                                                </Box>
-                                            </Stack>
-                                        </CardContent>
-                                    </Card>
-                                )
-                            }
-
-							{response && (
+							{steps && (
 								<Card
 									sx={{
 										width: "100%",
 										mt: 3,
-										background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+										background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
 									}}
 								>
-									<CardContent>
-										<Stack spacing={2}>
+									<CardContent
+										sx={{
+											cursor: "pointer",
+										}}
+										onClick={() => setStepsExpanded(!stepsExpanded)}
+									>
+										<Stack direction="row" justifyContent="space-between" alignItems="center">
 											<Typography variant="h6" color="primary" fontWeight="bold">
-												Audit Results
+												Audit Steps
 											</Typography>
+											<Button
+												size="small"
+												variant="text"
+												sx={{ minWidth: "auto", p: 0.5 }}
+											>
+												{stepsExpanded ? <ExpandLess /> : <ExpandMore />}
+											</Button>
+										</Stack>
+										{stepsExpanded && (
 											<Box
 												component="pre"
 												sx={{
-													backgroundColor: "#263238",
-													color: "#aed581",
+													mt: 2,
+													backgroundColor: "#004d40",
+													color: "#b2dfdb",
 													padding: 2,
 													borderRadius: 2,
 													overflow: "auto",
@@ -349,11 +348,99 @@ function App() {
 													maxHeight: "400px",
 												}}
 											>
-												{JSON.stringify(response, null, 2)}
+												{steps.map((step, index) => `${index + 1}. ${step}`).join("\n")}
 											</Box>
-										</Stack>
+										)}
 									</CardContent>
 								</Card>
+							)}
+
+                            {extraction && (
+                                <Card sx={{
+                                        width: "100%",
+                                        mt: 3,
+                                        background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
+                                    }}>
+                                    <CardContent
+                                        sx={{
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={() => setExtractionExpanded(!extractionExpanded)}
+                                    >
+                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                            <Typography variant="h6" color="primary" fontWeight="bold">
+                                                Document Metadata
+                                            </Typography>
+                                            <Button
+                                                size="small"
+                                                variant="text"
+                                                sx={{ minWidth: "auto", p: 0.5 }}
+                                            >
+                                                {extractionExpanded ? <ExpandLess /> : <ExpandMore />}
+                                            </Button>
+                                        </Stack>
+                                        {extractionExpanded && (
+                                            <Box
+                                                sx={{
+                                                    mt: 2,
+                                                    backgroundColor: "#004d40",
+                                                    color: "#b2dfdb",
+                                                    padding: 2,
+                                                    borderRadius: 2,
+                                                    overflow: "auto",
+                                                    fontSize: "0.875rem",
+                                                    fontFamily: '"Consolas", "Monaco", "Courier New", monospace',
+                                                    maxHeight: "400px",
+                                                }}
+                                            >
+                                                <pre>{JSON.stringify(extraction, null, 2)}</pre>
+                                            </Box>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+							{response?.issues && (
+								<Stack 
+                                    spacing={2} mt={2}
+                                    sx={{width:"100%"}}
+                                >
+                                    <Typography variant="h6" color="primary" fontWeight="bold">
+										Audit Results
+									</Typography>
+									{response.issues.map((issue: any, index: number) => (
+										<Card key={index} variant="outlined">
+											<CardContent>
+												<Stack
+													direction="row"
+													justifyContent="space-between"
+													alignItems="center"
+												>
+													<Typography variant="subtitle1" fontWeight="bold">
+														{issue.type}
+													</Typography>
+													<Chip
+														label={issue.severity.toUpperCase()}
+														color={
+															issue.severity === "high"
+																? "error"
+																: issue.severity === "medium"
+																? "warning"
+																: "success"
+														}
+														size="small"
+													/>
+												</Stack>
+												<Typography variant="body2" mt={1}>
+													{issue.description}
+												</Typography>
+												<Typography variant="body2" mt={1} color="text.secondary">
+													Suggestion: {issue.suggestion}
+												</Typography>
+											</CardContent>
+										</Card>
+									))}
+								</Stack>
 							)}
 						</Stack>
 					</Paper>
