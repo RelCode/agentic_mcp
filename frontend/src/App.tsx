@@ -43,6 +43,7 @@ function App() {
 	const [uploading, setUploading] = useState(false);
 	const [response, setResponse] = useState<any>(null);
 	const [extraction, setExtraction] = useState<any>(null);
+	const [trace, setTrace] = useState<any>(null);
 	const [steps, setSteps] = useState<string[] | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -62,14 +63,15 @@ function App() {
 
 	const [extractionExpanded, setExtractionExpanded] = useState(false);
 	const [stepsExpanded, setStepsExpanded] = useState(false);
+    const [traceExpanded, setTraceExpanded] = useState(false);
 
 	const handleFileUpload = async () => {
 		if (!selectedFile) {
 			setError("Please select a file first");
 			return;
 		}
-        setExtractionExpanded(false);
-        setStepsExpanded(false);
+		setExtractionExpanded(false);
+		setStepsExpanded(false);
 
 		setUploading(true);
 		setError(null);
@@ -92,6 +94,7 @@ function App() {
 			setResponse(data.result);
 			setExtraction(data.extraction);
 			setSteps(data.steps);
+			setTrace(data.trace);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Upload failed");
 		} finally {
@@ -105,8 +108,8 @@ function App() {
 			return;
 		}
 
-        setExtractionExpanded(false);
-        setStepsExpanded(false);
+		setExtractionExpanded(false);
+		setStepsExpanded(false);
 
 		setUploading(true);
 		setError(null);
@@ -129,6 +132,7 @@ function App() {
 			setResponse(data.result);
 			setExtraction(data.extraction);
 			setSteps(data.steps);
+			setTrace(data.trace);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Submission failed");
 		} finally {
@@ -307,12 +311,56 @@ function App() {
 								</Alert>
 							)}
 
+							{trace && (
+								<Card
+									sx={{
+										width: "100%",
+										mt: 3,
+										background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+									}}
+								>
+									<CardContent
+                                        sx={{
+											cursor: "pointer",
+										}}
+										onClick={() => setTraceExpanded(!traceExpanded)}
+                                    >
+										<Stack direction="row" justifyContent="space-between" alignItems="center">
+											<Typography variant="h6" color="primary" fontWeight="bold">
+												Agent Reasoning Trace
+											</Typography>
+                                            <Button size="small" variant="text" sx={{ minWidth: "auto", p: 0.5 }}>
+												{traceExpanded ? <ExpandLess /> : <ExpandMore />}
+											</Button>
+										</Stack>
+                                        {
+                                            traceExpanded && (
+                                                <Box
+                                                    component="pre"
+                                                    sx={{
+                                                        backgroundColor: "#0d47a1",
+                                                        color: "#bbdefb",
+                                                        padding: 2,
+                                                        borderRadius: 2,
+                                                        overflow: "auto",
+                                                        maxHeight: "500px",
+                                                        fontFamily: "Consolas, monospace",
+                                                    }}
+                                                >
+                                                    {JSON.stringify(trace, null, 2)}
+                                                </Box>
+                                            )
+                                        }
+									</CardContent>
+								</Card>
+							)}
+
 							{steps && (
 								<Card
 									sx={{
 										width: "100%",
 										mt: 3,
-										background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
+										background: "linear-gradient(135deg, #80ead8ff 0%, #75deecff 100%)",
 									}}
 								>
 									<CardContent
@@ -325,11 +373,7 @@ function App() {
 											<Typography variant="h6" color="primary" fontWeight="bold">
 												Audit Steps
 											</Typography>
-											<Button
-												size="small"
-												variant="text"
-												sx={{ minWidth: "auto", p: 0.5 }}
-											>
+											<Button size="small" variant="text" sx={{ minWidth: "auto", p: 0.5 }}>
 												{stepsExpanded ? <ExpandLess /> : <ExpandMore />}
 											</Button>
 										</Stack>
@@ -355,57 +399,52 @@ function App() {
 								</Card>
 							)}
 
-                            {extraction && (
-                                <Card sx={{
-                                        width: "100%",
-                                        mt: 3,
-                                        background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
-                                    }}>
-                                    <CardContent
-                                        sx={{
-                                            cursor: "pointer",
-                                        }}
-                                        onClick={() => setExtractionExpanded(!extractionExpanded)}
-                                    >
-                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                            <Typography variant="h6" color="primary" fontWeight="bold">
-                                                Document Metadata
-                                            </Typography>
-                                            <Button
-                                                size="small"
-                                                variant="text"
-                                                sx={{ minWidth: "auto", p: 0.5 }}
-                                            >
-                                                {extractionExpanded ? <ExpandLess /> : <ExpandMore />}
-                                            </Button>
-                                        </Stack>
-                                        {extractionExpanded && (
-                                            <Box
-                                                sx={{
-                                                    mt: 2,
-                                                    backgroundColor: "#004d40",
-                                                    color: "#b2dfdb",
-                                                    padding: 2,
-                                                    borderRadius: 2,
-                                                    overflow: "auto",
-                                                    fontSize: "0.875rem",
-                                                    fontFamily: '"Consolas", "Monaco", "Courier New", monospace',
-                                                    maxHeight: "400px",
-                                                }}
-                                            >
-                                                <pre>{JSON.stringify(extraction, null, 2)}</pre>
-                                            </Box>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
+							{extraction && (
+								<Card
+									sx={{
+										width: "100%",
+										mt: 3,
+										background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
+									}}
+								>
+									<CardContent
+										sx={{
+											cursor: "pointer",
+										}}
+										onClick={() => setExtractionExpanded(!extractionExpanded)}
+									>
+										<Stack direction="row" justifyContent="space-between" alignItems="center">
+											<Typography variant="h6" color="primary" fontWeight="bold">
+												Document Metadata
+											</Typography>
+											<Button size="small" variant="text" sx={{ minWidth: "auto", p: 0.5 }}>
+												{extractionExpanded ? <ExpandLess /> : <ExpandMore />}
+											</Button>
+										</Stack>
+										{extractionExpanded && (
+											<Box
+												sx={{
+													mt: 2,
+													backgroundColor: "#004d40",
+													color: "#b2dfdb",
+													padding: 2,
+													borderRadius: 2,
+													overflow: "auto",
+													fontSize: "0.875rem",
+													fontFamily: '"Consolas", "Monaco", "Courier New", monospace',
+													maxHeight: "400px",
+												}}
+											>
+												<pre>{JSON.stringify(extraction, null, 2)}</pre>
+											</Box>
+										)}
+									</CardContent>
+								</Card>
+							)}
 
 							{response?.issues && (
-								<Stack 
-                                    spacing={2} mt={2}
-                                    sx={{width:"100%"}}
-                                >
-                                    <Typography variant="h6" color="primary" fontWeight="bold">
+								<Stack spacing={2} mt={2} sx={{ width: "100%" }}>
+									<Typography variant="h6" color="primary" fontWeight="bold">
 										Audit Results
 									</Typography>
 									{response.issues.map((issue: any, index: number) => (
