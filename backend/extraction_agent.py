@@ -37,7 +37,7 @@ async def run_extraction_agent(document_text: str) -> Any:
     llm = get_llm()
     parser = JsonOutputParser()
     
-    prompt = EXTRACTION_PROMPT.format_prompt(text=document_text)
+    prompt = EXTRACTION_PROMPT.format_messages(text=document_text)
     raw_prompt = prompt[0].content # grab content for trace
     
     # messages = EXTRACTION_PROMPT.format_messages(text=document_text)

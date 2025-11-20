@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List, Dict
 from models import Issue, ExtractionResult, AuditReport
 from tools_verification import verify_references
 from langchain_core.prompts import ChatPromptTemplate
@@ -85,7 +85,7 @@ def calculate_risk_score (issues: List[Issue]) -> int:
             
     return max(0, min(100, score))
 
-async def run_audit_agent(document_text: str, extraction: ExtractionResult) -> AuditReport:
+async def run_audit_agent(document_text: str, extraction: ExtractionResult) -> Any:
     verification = verify_references(extraction)
     issues = build_issues_from_extraction(extraction, verification)
     overall_risk_score = calculate_risk_score(issues)
@@ -97,18 +97,31 @@ async def run_audit_agent(document_text: str, extraction: ExtractionResult) -> A
         for i in issues
     ) or "No issues identified."
     
-    messages = SUMMARY_PROMPT.format_messages(
+    prompt = SUMMARY_PROMPT.format_messages(
         document_text=document_text,
         issues_text=issues_text,
         score=overall_risk_score
     )
     
-    response = await llm.ainvoke(messages)
-    summary = response.content.strip()
+    raw_prompt = prompt[0].content # grab content for trace
+    
+    response = await llm.ainvoke(prompt)
+    raw_ouput = response.content
+    
+    summary = raw_ouput.strip()
     
     
-    return AuditReport(
+    report = AuditReport(
         issues=issues,
         overall_risk_score=overall_risk_score,
         summary=summary
     )
+    
+    trace = {
+        "audit_issues": [i.model_dump() for i in issues],
+        "overall_risk_score": overall_risk_score,
+        "summary_prompt": raw_prompt,
+        "raw_llm_output": raw_ouput
+    }
+    
+    return report, trace
