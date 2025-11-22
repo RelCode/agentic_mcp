@@ -18,4 +18,4 @@ class AuditReport(BaseModel):
     issues: List[Issue]
     overall_risk_score: int
     summary: str
-    
+    steps: List[str]
