@@ -114,7 +114,8 @@ async def run_audit_agent(document_text: str, extraction: ExtractionResult) -> A
     report = AuditReport(
         issues=issues,
         overall_risk_score=overall_risk_score,
-        summary=summary
+        summary=summary,
+        steps=[]
     )
     
     trace = {

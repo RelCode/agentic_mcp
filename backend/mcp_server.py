@@ -1,7 +1,7 @@
 # import sys
 # from pathlib import Path
 
-from typing import Any
+from typing import Any, List
 from mcp.server.fastmcp import FastMCP
 # from mcp.types import CallToolResult, TextContext
 
@@ -14,7 +14,7 @@ from orchestrator_agent import orchestrate_document_audit
 mcp = FastMCP("DocumentAuditorMCP")
 
 @mcp.tool()
-async def audit_document_text(text: str) -> dict:
+async def audit_document_text(text: str) -> AuditReport:
     """
     Audit tax/legal document and return structured issues, score, summary & steps
     """
@@ -31,12 +31,12 @@ async def audit_document_text(text: str) -> dict:
         for issue in report.issues
     ]
     
-    results = {
-        "issues": issues,
-        "overall_risk_score": report.overall_risk_score,
-        "summary": report.summary,
-        "steps": steps
-    }
+    results: AuditReport = AuditReport(
+        issues=issues,
+        overall_risk_score=report.overall_risk_score,
+        summary=report.summary,
+        steps=steps
+    )
     
     return results
     
