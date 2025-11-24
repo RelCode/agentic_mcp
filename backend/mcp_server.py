@@ -14,6 +14,27 @@ from orchestrator_agent import orchestrate_document_audit
 mcp = FastMCP("DocumentAuditorMCP")
 
 @mcp.tool()
+async def health_check() -> str:
+    """
+    Simple health check tool
+    """
+    return "Document Auditor MCP is healthy and running."
+
+@mcp.tool()
+async def extract_metadata(text: str) -> Any:
+    """
+    Extract structured metadata from tax/legal document text
+    """
+    extraction, _, _, _ = await orchestrate_document_audit(text)
+    return {
+        "referenced_acts": extraction.referenced_acts,
+        "referenced_years": extraction.referenced_years,
+        "has_disclaimer": extraction.has_disclaimer,
+        "has_scope_of_work": extraction.has_scope_of_work,
+        "notes": extraction.notes
+    }
+
+@mcp.tool()
 async def audit_document_text(text: str) -> AuditReport:
     """
     Audit tax/legal document and return structured issues, score, summary & steps
@@ -31,7 +52,7 @@ async def audit_document_text(text: str) -> AuditReport:
         for issue in report.issues
     ]
     
-    results: AuditReport = AuditReport(
+    results = AuditReport(
         issues=issues,
         overall_risk_score=report.overall_risk_score,
         summary=report.summary,
